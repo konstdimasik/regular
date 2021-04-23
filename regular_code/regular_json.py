@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import datetime as dt
 import json
 import sys
@@ -74,10 +76,15 @@ def print_next_tasks():
 #             for value in sql.execute('SELECT * FROM task'):
 #                 print(value)
 
-print('Сейчас доступны -add, -tasks, -next')
-if sys.argv[1] == '-add':
-    add_task
-if sys.argv[1] == '-tasks':
-    print_tasks()
-if sys.argv[1] == '-next':
-    print_next_tasks()
+def main():
+    print('Сейчас доступны -add, -tasks, -next')
+    if sys.argv[1] == '-add':
+        add_task
+    if sys.argv[1] == '-tasks':
+        print_tasks()
+    if sys.argv[1] == '-next':
+        print_next_tasks()
+
+
+if __name__ == '__main__':
+    main()
