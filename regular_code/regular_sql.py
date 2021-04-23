@@ -15,26 +15,26 @@ sql = db.cursor()
 
 # Model
 def create_table():
-    sql.execute('''CREATE TABLE IF NOT EXISTS task(
-        task_id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        period INT,
-        next_date DATE
-    )''')
-    sql.execute('''CREATE TABLE IF NOT EXISTS date_updates(
-        date_id INTEGER PRIMARY KEY,
-        dates DATE NOT NULL,
-        task_id INT NOT NULL,
-        FOREIGN KEY (task_id) REFERENCES task(task_id)
-    )''')
+    sql.execute('CREATE TABLE IF NOT EXISTS task(\n'
+                '        task_id INTEGER PRIMARY KEY,\n'
+                '        name TEXT NOT NULL,\n'
+                '        description TEXT,\n'
+                '        period INT,\n'
+                '        next_date DATE\n'
+                '    )')
+    sql.execute('CREATE TABLE IF NOT EXISTS date_updates(\n'
+                '        date_id INTEGER PRIMARY KEY,\n'
+                '        dates DATE NOT NULL,\n'
+                '        task_id INT NOT NULL,\n'
+                '        FOREIGN KEY (task_id) REFERENCES task(task_id)\n'
+                '    )')
     db.commit()
 
 
 def add_task(input_str):
     input_task = input_str.split(';')
     name = input_task[0]
-    sql.execute('SELECT name FROM task WHERE name = ?', input_task[0])
+    sql.execute("SELECT name FROM task WHERE name = ?", input_task[0])
     task_name = sql.fetchone()
     if task_name is not None:
         return 'Такая задача уже есть:\n' + str(sql.fetchone())
@@ -42,7 +42,7 @@ def add_task(input_str):
         desc = input_task[1]
     if len(input_task) == 3:
         period = input_task[2]
-    sql.execute('INSERT INTO task VALUES (?, ?, ?, ?)',
+    sql.execute("INSERT INTO task VALUES (?, ?, ?, ?)",
                 (None, name, desc, period))
     db.commit()
     print('Задача добавлена')
@@ -81,24 +81,24 @@ def add_date(input_str):
 
 
 def update_period(task_name):
-    sql.execute('''
-                SELECT t.task_id, t.period, d.dates
-                FROM date_updates AS d
-                JOIN task AS t
-                WHERE d.task_id = t.task_id and t.name = ?
-                ORDER BY d.dates
-                ''', (task_name,))
+    sql.execute('\n'
+                '                SELECT t.task_id, t.period, d.dates\n'
+                '                FROM date_updates AS d\n'
+                '                JOIN task AS t\n'
+                '                WHERE d.task_id = t.task_id and t.name = ?\n'
+                '                ORDER BY d.dates\n'
+                '                ', (task_name,))
     date_list = sql.fetchall()
-    numdelta = len(date_list)
-    sumdelta = dt.timedelta(days=0)
+    num_delta = len(date_list)
+    sum_delta = dt.timedelta(days=0)
     i = 1
     while i < len(date_list):
         date_i = dt.date.fromisoformat(date_list[i][2])
         date_prev = dt.date.fromisoformat(date_list[i-1][2])
         delta = date_i - date_prev
-        sumdelta += delta
+        sum_delta += delta
         i += 1
-    avg_delta = (sumdelta + dt.timedelta(date_list[0][1])) / numdelta
+    avg_delta = (sum_delta + dt.timedelta(date_list[0][1])) / num_delta
     sql.execute('UPDATE task SET period = ? WHERE name = ?',
                 (avg_delta.days, task_name,))
     db.commit()
@@ -107,12 +107,11 @@ def update_period(task_name):
 
 
 def update_next_date(task_name):
-    sql.execute('''
-                SELECT t.task_id, t.period, MAX(d.dates)
-                FROM task AS t
-                JOIN date_updates AS d
-                WHERE d.task_id = t.task_id and t.name = ?
-                ''', (task_name,))
+    sql.execute('                SELECT t.task_id, t.period, MAX(d.dates)\n'
+                '                FROM task AS t\n'
+                '                JOIN date_updates AS d\n'
+                '                WHERE d.task_id = t.task_id and t.name = ?\n'
+                '                ', (task_name,))
     date_list = sql.fetchone()
     task_date = dt.date.fromisoformat(date_list[2])
     next_task_date = task_date + dt.timedelta(date_list[1])
@@ -126,8 +125,8 @@ def update_next_date(task_name):
 # View
 def print_table(table_name):
     sql.execute(f'SELECT * FROM {table_name}')
-    myprettytable = from_db_cursor(sql)
-    print(myprettytable)
+    my_pretty_table = from_db_cursor(sql)
+    print(my_pretty_table)
 
 
 def last_completed_task():

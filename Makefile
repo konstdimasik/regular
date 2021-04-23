@@ -1,0 +1,2 @@
+regular:
+	poetry run regular
