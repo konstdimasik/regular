@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import datetime as dt
 import sqlite3
 
@@ -149,29 +151,34 @@ def next_tasks():
     return sql
 
 
-# Controller
-start = input('Сейчас доступны \nadd_task (1)\nadd_date (2)\nprint_table (3)\n'
-              'next_tasks (4)\nЧто делаем?\n')
-if start == '1':
-    input_str = input('Опишите задачу: название; описание; '
-                      'как часто выполнять(раз в N дней).\n')
-    output_str = add_task(input_str)
-    print(output_str)
-elif start == '2':
-    input_str = input('Какую задачу; когда сделали (год.месяц.число)\n')
-    output_str = add_date(input_str)
-    print(output_str)
-    if output_str == 'Дата выполнения задачи добавлена':
-        output_str = update_period(input_str.split(';')[0])
+def main():
+    # Controller
+    start = input('Сейчас доступны \nadd_task (1)\nadd_date (2)\nprint_table (3)\n'
+                  'next_tasks (4)\nЧто делаем?\n')
+    if start == '1':
+        input_str = input('Опишите задачу: название; описание; '
+                          'как часто выполнять(раз в N дней).\n')
+        output_str = add_task(input_str)
         print(output_str)
-        output_str = update_next_date(input_str.split(';')[0])
+    elif start == '2':
+        input_str = input('Какую задачу; когда сделали (год.месяц.число)\n')
+        output_str = add_date(input_str)
         print(output_str)
-elif start == '3':
-    input_str = input('Какую таблицу вывести?\n')
-    print_table(input_str)
-elif start == '4':
-    print(from_db_cursor(last_completed_task()))
-    print(f'СЕГОДНЯ {dt.date.today().strftime("%Y-%m-%d"): >41}')
-    print(from_db_cursor(next_tasks()))
-else:
-    print(f'Неизвестная команда "{start}"')
+        if output_str == 'Дата выполнения задачи добавлена':
+            output_str = update_period(input_str.split(';')[0])
+            print(output_str)
+            output_str = update_next_date(input_str.split(';')[0])
+            print(output_str)
+    elif start == '3':
+        input_str = input('Какую таблицу вывести?\n')
+        print_table(input_str)
+    elif start == '4':
+        print(from_db_cursor(last_completed_task()))
+        print(f'СЕГОДНЯ {dt.date.today().strftime("%Y-%m-%d"): >41}')
+        print(from_db_cursor(next_tasks()))
+    else:
+        print(f'Неизвестная команда "{start}"')
+
+
+if __name__ == '__main__':
+    main()

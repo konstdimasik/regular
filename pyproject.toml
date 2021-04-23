@@ -1,15 +1,25 @@
 [tool.poetry]
 name = "regular"
 version = "0.1.0"
-description = "One more task manadger"
-authors = ["Your Name <you@example.com>"]
+description = "One more task manager"
+authors = ["Dmitry Konstantinov <konstdimasik@gmail.com>"]
+packages = [
+  { include = "regular_code" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 prettytable = "^2.1.0"
+flake8 = "^3.9.1"
 
 [tool.poetry.dev-dependencies]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+regular = "regular_sql:main"
