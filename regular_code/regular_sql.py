@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import datetime as dt
+import prompt
 import sqlite3
 
 from prettytable import from_db_cursor
@@ -8,7 +9,7 @@ from prettytable import from_db_cursor
 global db
 global sql
 
-db = sqlite3.connect('regular.db')
+db = sqlite3.connect('regular_code/regular.db')
 db.execute('PRAGMA foreign_keys = 1')
 sql = db.cursor()
 
@@ -46,8 +47,8 @@ def add_task(input_str):
                 (None, name, desc, period))
     db.commit()
     print('Задача добавлена')
-    input_date = input('Задача уже выполнена? "Нет" '
-                       'или дата(год.месяц.число)\n')
+    input_date = prompt.string('Задача уже выполнена? "Нет" '
+                               'или дата(год.месяц.число)\n')
     if input_date == 'Нет':
         return 'Ок, выполним позднее'
     else:
@@ -94,7 +95,7 @@ def update_period(task_name):
     i = 1
     while i < len(date_list):
         date_i = dt.date.fromisoformat(date_list[i][2])
-        date_prev = dt.date.fromisoformat(date_list[i-1][2])
+        date_prev = dt.date.fromisoformat(date_list[i - 1][2])
         delta = date_i - date_prev
         sum_delta += delta
         i += 1
@@ -103,7 +104,7 @@ def update_period(task_name):
                 (avg_delta.days, task_name,))
     db.commit()
     return (f'Периодичность задачи "{task_name}" '
-            f'пересчитана и равно {avg_delta.days}')
+            f'пересчитана и равна {avg_delta.days}')
 
 
 def update_next_date(task_name):
@@ -130,37 +131,37 @@ def print_table(table_name):
 
 
 def last_completed_task():
-    sql.execute('''
-                SELECT t.name, MAX(d.dates)
-                FROM task as t
-                JOIN date_updates AS d
-                WHERE d.task_id = t.task_id
-                GROUP BY t.name
-                ORDER BY d.dates
-                ''')
+    sql.execute('\n'
+                '                SELECT t.name, MAX(d.dates)\n'
+                '                FROM task as t\n'
+                '                JOIN date_updates AS d\n'
+                '                WHERE d.task_id = t.task_id\n'
+                '                GROUP BY t.name\n'
+                '                ORDER BY d.dates\n'
+                '                ')
     return sql
 
 
 def next_tasks():
-    sql.execute('''
-                SELECT name, next_date
-                FROM task
-                ORDER BY next_date
-                ''')
+    sql.execute('\n'
+                '                SELECT name, next_date\n'
+                '                FROM task\n'
+                '                ORDER BY next_date\n'
+                '                ')
     return sql
 
 
 def main():
     # Controller
-    start = input('Сейчас доступны \nadd_task (1)\nadd_date (2)\nprint_table (3)\n'
-                  'next_tasks (4)\nЧто делаем?\n')
+    start = prompt.string('Сейчас доступны \nadd_task (1)\nadd_date (2)\nprint_table (3)\n'
+                          'next_tasks (4)\nЧто делаем?\n')
     if start == '1':
-        input_str = input('Опишите задачу: название; описание; '
-                          'как часто выполнять(раз в N дней).\n')
+        input_str = prompt.string('Опишите задачу: название; описание; '
+                                  'как часто выполнять(раз в N дней).\n')
         output_str = add_task(input_str)
         print(output_str)
     elif start == '2':
-        input_str = input('Какую задачу; когда сделали (год.месяц.число)\n')
+        input_str = prompt.string('Какую задачу; когда сделали (год.месяц.число)\n')
         output_str = add_date(input_str)
         print(output_str)
         if output_str == 'Дата выполнения задачи добавлена':
@@ -169,7 +170,7 @@ def main():
             output_str = update_next_date(input_str.split(';')[0])
             print(output_str)
     elif start == '3':
-        input_str = input('Какую таблицу вывести?\n')
+        input_str = prompt.string('Какую таблицу вывести?\n')
         print_table(input_str)
     elif start == '4':
         print(from_db_cursor(last_completed_task()))
