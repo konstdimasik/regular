@@ -122,9 +122,20 @@ def update_next_date(task_name):
 
 # View
 def print_table(table_name):
-    sql.execute('SELECT * FROM ?', (table_name,))
-    my_pretty_table = from_db_cursor(sql)
-    print(my_pretty_table)
+    query = "SELECT 1 FROM sqlite_master WHERE type='table' and name = ?"
+    if sql.execute(query, (table_name,)).fetchone() is not None:
+        query = 'SELECT name, description, period, next_date FROM {}'.format(table_name)
+        sql.execute(query)
+        my_pretty_table = from_db_cursor(sql)
+        print(my_pretty_table)
+    else:
+        print('Wrong table name')
+
+
+def print_table_names():
+    sql.execute('SELECT name FROM sqlite_schema WHERE type = "table"')
+    table_names = from_db_cursor(sql)
+    print(table_names)
 
 
 def last_completed_task():
@@ -165,13 +176,15 @@ def main():
             output_str = update_next_date(input_str.split(';')[0])
             print(output_str)
     elif start == '3':
+        print_table_names()
         input_str = prompt.string('Какую таблицу вывести?\n')
         print_table(input_str)
     elif start == '4':
         print(from_db_cursor(last_completed_task()))
         print(f'СЕГОДНЯ {dt.date.today().strftime("%Y-%m-%d"): >41}')
         print(from_db_cursor(next_tasks()))
-    print(f'Неизвестная команда "{start}"')
+    else:
+        print(f'Неизвестная команда "{start}"')
 
 
 if __name__ == '__main__':
