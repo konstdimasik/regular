@@ -19,32 +19,36 @@ def create_table():
     cursor.execute('CREATE TABLE IF NOT EXISTS task(\n'
                    'task_id INTEGER PRIMARY KEY,\n'
                    'name TEXT NOT NULL,\n'
-                   '        description TEXT,\n'
-                   '        period INT,\n'
-                   '        next_date DATE\n'
-                   '    )')
+                   'description TEXT,\n'
+                   'period INT,\n'
+                   'next_date DATE\n'
+                   ')')
     cursor.execute('CREATE TABLE IF NOT EXISTS date_updates(\n'
-                   '        date_id INTEGER PRIMARY KEY,\n'
-                   '        dates DATE NOT NULL,\n'
-                   '        task_id INT NOT NULL,\n'
-                   '        FOREIGN KEY (task_id) REFERENCES task(task_id)\n'
-                   '    )')
+                   'date_id INTEGER PRIMARY KEY,\n'
+                   'dates DATE NOT NULL,\n'
+                   'task_id INT NOT NULL,\n'
+                   'FOREIGN KEY (task_id) REFERENCES task(task_id)\n'
+                   ')')
     conn.commit()
 
 
 def add_task(input_str):
-    input_task = input_str.split(';')
+    input_task = input_str.split('; ')
     name = input_task[0]
-    cursor.execute('SELECT name FROM task WHERE name = ?', input_task[0])
+    cursor.execute('SELECT name FROM task WHERE name = ?', (name,))
     task_name = cursor.fetchone()
     if task_name is not None:
-        return 'Такая задача уже есть:\n' + str(cursor.fetchone())
-    if len(input_task) == 2:
+        return 'Такая задача уже есть:\n' + str(cursor.fetchall())
+    if len(input_task) >= 2:
         desc = input_task[1]
-    if len(input_task) == 3:
+    else:
+        desc = prompt.string("Опишете суть задачи\n")
+    if len(input_task) >= 3:
         period = input_task[2]
-    cursor.execute('INSERT INTO task VALUES (?, ?, ?, ?)',
-                   (None, name, desc, period))
+    else:
+        period = prompt.string("Как часто нужно выполнять задачу\n")
+    cursor.execute('INSERT INTO task VALUES (?, ?, ?, ?, ?)',
+                   (None, name, desc, period, None))
     conn.commit()
     print('Задача добавлена')
     input_date = prompt.string('Задача уже выполнена? "Нет" '
@@ -59,6 +63,8 @@ def add_task(input_str):
     task_id = cursor.fetchone()
     cursor.execute('INSERT INTO date_updates VALUES(?,?,?)',
                    (None, dt.date(year, month, day), task_id[0]))
+    output_str = update_next_date(task_id[0])
+    print(output_str)
     conn.commit()
     return 'Дата выполнения задачи добавлена'
 
