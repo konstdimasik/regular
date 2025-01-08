@@ -24,3 +24,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 regular = "regular_code.regular_sql:main"
+regu = "regular_code.regular_sql2:main"

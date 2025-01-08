@@ -66,33 +66,34 @@ def add_task(input_str):
     output_str = update_next_date(task_id[0])
     print(output_str)
     conn.commit()
-    return 'Дата выполнения задачи добавлена'
+    return 'Следующая дата выполнения задачи добавлена'
 
 
 def add_date(input_str):
     list_input_date = input_str.split(';')
-    name = list_input_date[0]
-    cursor.execute('SELECT task_id FROM task WHERE name = ?', (name,))
-    task_id = cursor.fetchone()
-    if task_id is None:
+    task_id = list_input_date[0]
+    #cursor.execute('SELECT task_id FROM task WHERE name = ?', (name,))
+    cursor.execute("SELECT * FROM task WHERE task_id = ?", (task_id,))
+    result = cursor.fetchone()
+    if result is None:
         return 'Нет такой задачи'
     list_date = list_input_date[1].split('.')
     year = int(list_date[0])
     month = int(list_date[1])
     day = int(list_date[2])
     cursor.execute('INSERT INTO date_updates VALUES(?,?,?)',
-                   (None, dt.date(year, month, day), task_id[0]))
+                   (None, dt.date(year, month, day), task_id))
     conn.commit()
     return 'Дата выполнения задачи добавлена'
 
 
-def update_period(task_name):
+def update_period(task_id):
     cursor.execute('                SELECT t.task_id, t.period, d.dates\n'
                    '                FROM date_updates AS d\n'
                    '                JOIN task AS t\n'
-                   '                WHERE d.task_id = t.task_id and t.name = ?\n'
+                   '                WHERE d.task_id = t.task_id and t.task_id = ?\n'
                    '                ORDER BY d.dates\n'
-                   '                ', (task_name,))
+                   '                ', (task_id,))
     date_list = cursor.fetchall()
     num_delta = len(date_list)
     sum_delta = dt.timedelta(days=0)
@@ -104,23 +105,27 @@ def update_period(task_name):
         sum_delta += delta
         i += 1
     avg_delta = (sum_delta + dt.timedelta(date_list[0][1])) / num_delta
-    cursor.execute('UPDATE task SET period = ? WHERE name = ?',
-                   (avg_delta.days, task_name,))
+    cursor.execute('UPDATE task SET period = ? WHERE task_id = ?',
+                   (avg_delta.days, task_id,))
+    cursor.execute('SELECT name FROM task WHERE task_id = ?', (task_id,))
+    task_name = cursor.fetchone()[0]
     conn.commit()
     return (f'Периодичность задачи "{task_name}" '
             f'пересчитана и равна {avg_delta.days}')
 
 
-def update_next_date(task_name):
+def update_next_date(task_id):
     cursor.execute('                SELECT t.task_id, t.period, MAX(d.dates)\n'
                    '                FROM task AS t\n'
                    '                JOIN date_updates AS d\n'
-                   '                WHERE d.task_id = t.task_id and t.name = ?\n', (task_name,))
+                   '                WHERE d.task_id = t.task_id and t.task_id = ?\n', (task_id,))
     date_list = cursor.fetchone()
     task_date = dt.date.fromisoformat(date_list[2])
     next_task_date = task_date + dt.timedelta(date_list[1])
     cursor.execute('UPDATE task SET next_date = ? WHERE task_id = ?',
                    (next_task_date, date_list[0],))
+    cursor.execute('SELECT name FROM task WHERE task_id = ?', (task_id,))
+    task_name = cursor.fetchone()[0]
     conn.commit()
     return (f'Новая дата задачи "{task_name}" '
             f'пересчитана и равна {next_task_date}')
@@ -159,7 +164,7 @@ def last_completed_task():
 
 
 def next_tasks():
-    cursor.execute('                SELECT name, next_date, period\n'
+    cursor.execute('                SELECT task_id, name, next_date, period\n'
                    '                FROM task\n'
                    '                ORDER BY next_date\n'
                    '                ')
@@ -169,8 +174,8 @@ def next_tasks():
 def main():
     # Controller
     while True:
-        start = prompt.string('Сейчас доступны:\nadd_task (1)\nadd_date (2)\nprint_table (3)\n'
-                              'next_tasks (4)\nexit (5)\nЧто делаем?\n')
+        start = prompt.string('Сейчас доступны:\n add_task (1)\n add_date (2)\n print_table (3)\n '
+                              'next_tasks (4)\n exit (5)\nЧто делаем?\n')
         if start == '1':
             input_str = prompt.string('Опишите задачу: название; описание; '
                                       'как часто выполнять(раз в N дней).\n')
